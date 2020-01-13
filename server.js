@@ -1,6 +1,5 @@
 'use strict';
 
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -10,88 +9,101 @@ const PORT = process.env.PORT || 3000;
 const server = express();
 server.use(cors());
 
+
 // link with other  js page //
-const client = require('./modules/client.js');
+
 const location = require('./modules/location.js');
 const weather = require('./modules/weather.js');
 const events = require('./modules/events.js');
-const yelp = require('./modules/yelp.js');
+// const yelp = require('./modules/yelp.js');
 const movies = require('./modules/movies.js');
 
 
 //////  handler function 
 
 server.get('/location', locationHandler);
-server.get('/weather', weatherHanddler);
-server.get('/events', eventHanddler);
-server.get('/yelp', yelpHandler);
+server.get('/weather', weatherHandler);
+server.get('/events', eventHandler);
+// server.get('/yelp', yelpHandler);
 server.get('/movies', moviesHandler);
+
+
+// server is working
+server.get('/', (request, response) => {
+  response.status(200).send('Well done ');
+});
+
+
 
 /////// location handler
 function locationHandler(request, response) {
-    const city = request.query.data;
-    console.log('city', city);
+  console.log('locationlocation locationlocationlocation: ', request.query.city);
 
-    location.getlocation(city)
-        .then(data => sendJson(data, response))
-        .catch((error) => errorHandler(error, request, Response));
+  location(request.query.city)
+    .then(locationData => response.status(200).json(locationData))
+    // .catch((error) => errorHandler(error, request, response));
+
 };
+
 
 ///// weather handler 
-function weatherHanddler(request, response) {
-    const location = request.query.data;
+function weatherHandler(request, response) {
+  weather(request.query)
+    .then(weatherData => response.status(200).json(weatherData))
+    // .catch((error) => errorHandler(error, request, response));
 
-    weather(location)
-        .then(summaries => sendJson(summaries, response))
-        .catch((error) => errorHandler(error, request, Response));
 };
+
 
 /////// event handler  
-function eventHanddler(request, response) {
-    const location = request.query.data;
+function eventHandler(request, response) {
+  events(request.query)
+    .then(eventData => response.status(200).json(eventData))
+    .catch((error) => errorHandler(error, request, response));
 
-    events(location)
-        .then(eventslist => sendJson(eventslist, response))
-        .catch((error) => errorHandler(error, request, Response));
 };
-/////// yelb handler 
-function yelpHandler(request, response) {
-    const location = request.query.data;
 
-    yelp(location)
-        .then(reviews => sendJson(reviews, response))
-        .catch((error) => errorHandler(error, request, Response));
-};
+
+
+
+
 /////// movies handler 
 function moviesHandler(request, response) {
-    const location = request.query.data;
+  const location = request.query;
 
-    movies(location)
-        .then(list => sendJson(list, response))
-        .catch((error) => errorHandler(error, request, Response));
+  movies(location)
+    .then(movieData => response.status(200).send(movieData))
+    // .catch((error) => errorHandler(error, request, response));
 };
 
 
-function sendJson(data, Response) {
-    Response.status(200).json(data);
-};
 
-//////// error 
+/////// yelp handler 
+// function yelpHandler(request, response) {
+//   const location = request.query;
+//   yelp(location)
+//   .then(yelpData => response.status(200).send(yelpData))
+// .catch((error) => errorHandler(error, request, response));
+
+
+// }
+
+
+
+// User Error 
 server.use('*', (request, response) => {
-    response.status(404).send('NOT Found');
-  });
+  response.status(404).send('not found');
+});
 
-function notFoundHandler(request, response) {
-    response.status(404).send('NOT FOUND');
-};
 
-function errorHandler(error, req, Response) {
-    Response.status(500).send('Error');
-};
+// function errorHandler(error, request, response) {
+//   response.status(500).send('Error');
+// };
 
-// ///// listen to app 
-client.connect()
-    .then(() => {
-        server.listen(PORT, () => console.log(`App listening on ${PORT}`))
-    })
-    .catch(err => console.error(err));
+
+server.listen(PORT, () => console.log(`App listening on ${PORT}`))
+
+
+
+
+

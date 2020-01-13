@@ -1,36 +1,38 @@
 'use strict';
 
-const superagent =require('superagent');
+const superagent = require('superagent');
+module.exports = getMovie;
 
+function getMovie(query) {
+  // console.log('query movies:', query);
+  let location = query.search_query;
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${location}`;
+  // console.log('url', url);
+  return superagent.get(url)
+    .then(data => {
+      // console.log('datamovies', data.body);
+      return data.body.results.map(movie => {
+        return new Movies(movie);
+      })
+    })
+    .catch(error => {
+      errorHandler(error, request, response);
+    })
 
-module.exports = getMovies;
-
-///////////// get data from api
-function getMovies(location) {
-    const url = `https://api.themoviedb.org/3/movie/550?api_key=${process.env.MOVIE_API_KEY}/${location}`;
-    return superagent.get(url)
-        .then(data => parseMoviesData(data.body));
 }
-function parseMoviesData(data) {
-    try {
-        const movies = data.results.map(movie => {
-            return new Movies(movie);
-        });
-        return Promise.resolve(movies);
-    } catch (e) {
-        return Promise.reject(e);
-    }
+//
+/////////////constractor function
+function Movies(data) {
+  this.title = data.title;
+  this.overview = data.overview;
+  this.average_votes = data.vote_average;
+  this.popularity = data.popularity;
+  this.released_date = data.release_date;
+  this.image_url = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+
 }
 
-///////////constractor function
-function Movie(movie) {
-    this.tableName = 'movies';
-    this.title = movie.title;
-    this.overview = movie.overview;
-    this.average_votes = movie.vote_average;
-    this.total_votes = movie.vote_count;
-    this.image_url = 'https://image.tmdb.org/t/p/w500' + movie.poster_path;
-    this.popularity = movie.popularity;
-    this.released_on = movie.release_data;
-    this.created_at = Date.now();
+// Server Error 
+function errorHandler(error, request, response) {
+  response.status(500).send(error);
 }
